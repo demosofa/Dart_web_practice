@@ -1,9 +1,10 @@
 import 'dart:html';
+import 'dart:core';
 
 enum TargetBtn { ok, cancel }
 
 class Modal {
-  Element? modal;
+  DialogElement? modal;
   Element? header;
   Element? containerContent;
   Element? containerBtn;
@@ -11,8 +12,7 @@ class Modal {
   Element? _cancelBtn;
   EventListener? _onOk;
   EventListener? _onCancel;
-  bool isOpen = false;
-  Modal(String id) {
+  Modal(String className) {
     _okBtn = document.createElement("button");
     _cancelBtn = document.createElement("button");
     _okBtn!.text = "Ok";
@@ -20,11 +20,14 @@ class Modal {
     header = document.createElement("h3");
     containerContent = document.createElement("div");
     containerBtn = document.createElement("div");
-    modal = document.createElement("div");
-    modal!.id = id;
+    containerBtn!.append(_cancelBtn!);
+    containerBtn!.append(_okBtn!);
+    modal = document.createElement("dialog") as DialogElement;
+    modal!.className = className;
     modal!.append(header!);
     modal!.append(containerContent!);
     modal!.append(containerBtn!);
+    document.body!.append(modal!);
   }
 
   Element get okBtn => _okBtn!;
@@ -54,74 +57,41 @@ class Modal {
   }
 
   void _addBtn(Element? btn, EventListener? event, [String type = "click"]) {
-    if (btn != null && event != null) {
+    if (btn != null) {
       btn.addEventListener(type, event);
       containerBtn!.append(btn);
     }
   }
 
   void _removeBtn(Element? btn, EventListener? event, [String type = "click"]) {
-    if (btn != null && event != null) {
+    if (btn != null) {
       btn.removeEventListener(type, event);
       btn.remove();
     }
   }
 
   void open({String? content = "", String? title = ""}) {
-    isOpen = true;
-    _addBtn(_okBtn, _onOk);
-    _addBtn(_cancelBtn, _onCancel);
     header!.text = title;
     containerContent!.innerHtml = content;
-    document.body!.append(modal!);
+    modal!.showModal();
   }
 
   void close() {
-    isOpen = false;
-    _removeBtn(_okBtn, _onOk);
-    _removeBtn(_cancelBtn, _onCancel);
     header!.text = "";
     containerContent!.innerHtml = "";
-    modal!.remove();
+    modal!.close();
   }
 }
 
 void main() {
   final switcherContainer = querySelector(".switcher-container")!;
   final switcher = querySelector(".switch-icon")!;
-  final switchColors = querySelectorAll(".sw-color > a");
   final switchBoxes = querySelectorAll(".sw-even > a");
   final boxTypeContainer = querySelector(".sw-box")!;
   final boxStyles = querySelectorAll(".sw-box > a");
+  final boxColors = querySelectorAll(".sw-color > a");
   final sections = querySelectorAll("body > section");
   final toggleModalBtn = querySelectorAll(".toggle-edit-modal");
-
-  final editModal = Modal("edit-modal");
-  editModal.okBtn = null;
-
-  editModal.onCancel = (e) {
-    editModal.close();
-  };
-
-  void setColor(key, value) {
-    window.localStorage[key] = value;
-    document.documentElement!.style.setProperty(key, value);
-  }
-
-  void removeColor(key) {
-    window.localStorage.remove(key);
-    document.documentElement!.style.removeProperty(key);
-  }
-
-  void toggleSection(bool toggle) {
-    for (var element in sections) {
-      if (toggle) {
-        element.classes.add("boxed");
-      } else {
-        element.classes.remove("boxed");
-      }
-    }
-  }
 
   Element cloneWithStyle(Element element, [bool? deep = true]) {
     final css = element.getComputedStyle();
@@ -136,28 +106,50 @@ void main() {
     return element;
   }
 
-  void toggleModal(ElementList? elements) {
-    if (elements == null) {
-      editModal.close();
-    } else {
-      editModal.open(title: "Hello there");
-      for (var child in elements) {
-        child = cloneWithStyle(child);
-        editModal.containerContent!.append(child);
+  final editModal = Modal("edit-modal");
+  editModal.okBtn = null;
+
+  editModal.onCancel = (e) {
+    editModal.close();
+  };
+
+  void setStyle(key, value) {
+    window.localStorage[key] = value;
+    document.documentElement!.style.setProperty(key, value);
+  }
+
+  void removeStyle(key) {
+    window.localStorage.remove(key);
+    document.documentElement!.style.removeProperty(key);
+  }
+
+  void toggleSection(bool toggle) {
+    for (var element in sections) {
+      if (toggle) {
+        element.classes.add("boxed");
+      } else {
+        element.classes.remove("boxed");
       }
+    }
+  }
+
+  void addChildToModal(ElementList elements) {
+    for (var child in elements) {
+      child = cloneWithStyle(child);
+      editModal.containerContent!.append(child);
     }
   }
 
   toggleModalBtn.asMap().forEach((key, btn) {
     btn.addEventListener("click", (e) {
       String name = btn.getAttribute("data-target")!;
-      editModal.isOpen = !editModal.isOpen;
+      editModal.open(title: "Hello there", content: "Edit $name");
       switch (name) {
         case "sw-color":
-          toggleModal(editModal.isOpen ? switchColors : null);
+          addChildToModal(boxColors);
           break;
         case "sw-box":
-          toggleModal(editModal.isOpen ? boxStyles : null);
+          addChildToModal(boxStyles);
           break;
       }
     });
@@ -176,19 +168,31 @@ void main() {
   });
 
   int? checkedBoxColor;
-  switchColors.asMap().forEach((index, swColor) {
+  boxColors.asMap().forEach((index, swColor) {
     swColor.addEventListener("click", (e) {
       if (checkedBoxColor != null) {
-        switchColors[checkedBoxColor!].classes.remove("checked");
+        boxColors[checkedBoxColor!].classes.remove("checked");
       }
       checkedBoxColor = index;
       swColor.classes.add("checked");
-      window.localStorage["checkedBoxColor"] = index.toString();
-      setColor("--switcher", swColor.style.getPropertyValue("--switcher"));
+      final value = swColor.style.getPropertyValue("--switcher");
+      setStyle("--switcher", value);
     });
   });
 
   int? checkedBoxStyle;
+  boxStyles.asMap().forEach((index, bxStyle) {
+    bxStyle.addEventListener("click", (e) {
+      if (checkedBoxStyle != null) {
+        boxStyles[checkedBoxStyle!].classes.remove("checked");
+      }
+      checkedBoxStyle = index;
+      bxStyle.classes.add("checked");
+      final value = bxStyle.style.getPropertyValue("--background");
+      setStyle("--background", value);
+    });
+  });
+
   for (var swBox in switchBoxes) {
     swBox.addEventListener("click", (e) {
       if (swBox.text == "box") {
@@ -200,50 +204,39 @@ void main() {
           boxStyles[checkedBoxStyle!].classes.remove("checked");
         }
         toggleSection(false);
-        removeColor("--background");
+        removeStyle("--background");
       }
     });
   }
 
-  boxStyles.asMap().forEach((index, bxStyle) {
-    bxStyle.addEventListener("click", (e) {
-      if (checkedBoxStyle != null) {
-        boxStyles[checkedBoxStyle!].classes.remove("checked");
-      }
-      checkedBoxStyle = index;
-      bxStyle.classes.add("checked");
-      window.localStorage["checkedBoxStyle"] = index.toString();
-      final child = bxStyle.children[0] as ImageElement;
-      setColor("--background", "url(${child.src})");
-    });
-  });
-
-  void loadCheck() {
-    String? loadBoxColor = window.localStorage["checkedBoxColor"];
-    String? loadBoxStyle = window.localStorage["checkedBoxStyle"];
-    if (loadBoxColor != null) {
-      checkedBoxColor = int.parse(loadBoxColor);
-    } else {
-      checkedBoxColor = 0;
-    }
-    switchColors[checkedBoxColor!].classes.add("checked");
-
-    if (loadBoxStyle != null) {
-      checkedBoxStyle = int.parse(loadBoxStyle);
-      toggleSection(true);
-      boxStyles[checkedBoxStyle!].classes.add("checked");
-    } else {
-      toggleSection(false);
+  void loadBoxColor() {
+    final value = window.localStorage["--switcher"];
+    if (value != null) {
+      checkedBoxColor = boxColors.indexWhere((element) {
+        final check = element.style.getPropertyValue("--switcher") == value;
+        if (check) {
+          element.classes.add("checked");
+        }
+        return check;
+      });
+      setStyle("--switcher", value);
     }
   }
 
-  void initColor(List<String> args) {
-    for (final key in args) {
-      final value = window.localStorage[key];
-      if (value != null) setColor(key, value);
+  void loadBoxStyle() {
+    final value = window.localStorage["--background"];
+    if (value != null) {
+      checkedBoxStyle = boxStyles.indexWhere((element) {
+        final check = element.style.getPropertyValue("--background") == value;
+        if (check) {
+          element.classes.add("checked");
+        }
+        return check;
+      });
+      setStyle("--background", value);
     }
   }
 
-  initColor(["--switcher", "--background"]);
-  loadCheck();
+  loadBoxStyle();
+  loadBoxColor();
 }

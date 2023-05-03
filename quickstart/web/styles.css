@@ -155,6 +155,7 @@ body > section.boxed {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  gap: 6px;
 }
 
 .sw-color > a {
@@ -164,8 +165,6 @@ body > section.boxed {
   padding: 0;
   background-color: var(--switcher);
   display: inline-block;
-  margin-right: 6px;
-  margin-bottom: 6px;
 }
 
 .sw-color > button {
@@ -178,8 +177,6 @@ body > section.boxed {
   font-size: large;
   font-weight: 600;
   cursor: pointer;
-  margin-right: 6px;
-  margin-bottom: 6px;
 }
 
 .sw-color > a.checked::before {
@@ -242,15 +239,18 @@ body > section.boxed {
 
 .sw-box > a {
   width: 40px;
-  height: 30px;
+  height: 25px;
   display: inline-block;
   position: relative;
+  background-image: var(--background);
+  background-size: cover;
 }
 
 .sw-box > a.checked::before {
   position: absolute;
-  left: 12px;
-  top: 12px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   font-family: fontawesome;
   content: "\f00c";
   color: #fff;
@@ -271,34 +271,30 @@ body > section.boxed {
   cursor: pointer;
 }
 
-#edit-modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  z-index: 10;
+.edit-modal {
+  min-width: 400px;
+  border: none !important;
+  border-radius: 6px;
 }
 
-#edit-modal::before {
-  content: "";
-  width: 100vw;
-  height: 100vh;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 998;
-  background-color: rgba(0, 0, 0, 0.295);
+.edit-modal::backdrop {
+  background-color: rgba(0, 0, 0, 0.8);
 }
 
-#edit-modal > div {
+.edit-modal > :nth-child(n):not(:first-child) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  margin-top: 15px;
+  gap: 8px;
   z-index: 999;
+}
+
+.edit-modal > :first-child {
+  margin-top: 0;
+  text-align: center;
+}
+
+.edit-modal > :last-child {
+  justify-content: end;
 }
