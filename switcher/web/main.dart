@@ -210,17 +210,20 @@ void main() {
   }
 
   void loadBoxColor() {
-    final value = window.localStorage["--switcher"];
+    var value = window.localStorage["--switcher"];
     if (value != null) {
       checkedBoxColor = boxColors.indexWhere((element) {
-        final check = element.style.getPropertyValue("--switcher") == value;
+        var check = element.style.getPropertyValue("--switcher") == value;
         if (check) {
           element.classes.add("checked");
         }
         return check;
       });
-      setStyle("--switcher", value);
+    } else {
+      boxColors.first.classes.add("checked");
+      value = boxColors.first.style.getPropertyValue("--switcher");
     }
+    setStyle("--switcher", value);
   }
 
   void loadBoxStyle() {
