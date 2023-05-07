@@ -277,7 +277,7 @@ body > section.boxed {
   background-color: rgba(0, 0, 0, 0.8);
 }
 
-.edit-modal > :nth-child(n):not(:first-child) {
+.edit-modal > :nth-child(n + 3) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -286,7 +286,8 @@ body > section.boxed {
   z-index: 999;
 }
 
-.edit-modal > :first-child {
+.edit-modal > h3,
+.edit-modal > h4 {
   margin-top: 0;
   text-align: center;
 }

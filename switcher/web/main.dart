@@ -5,8 +5,9 @@ enum TargetBtn { ok, cancel }
 
 class Modal {
   DialogElement? modal;
-  Element? header;
-  Element? containerContent;
+  Element? head;
+  Element? desc;
+  Element? body;
   Element? containerBtn;
   Element? _okBtn;
   Element? _cancelBtn;
@@ -17,43 +18,47 @@ class Modal {
     _cancelBtn = document.createElement("button");
     _okBtn!.text = "Ok";
     _cancelBtn!.text = "Cancel";
-    header = document.createElement("h3");
-    containerContent = document.createElement("div");
+    head = document.createElement("h3");
+    desc = document.createElement("h4");
+    body = document.createElement("div");
     containerBtn = document.createElement("div");
     containerBtn!.append(_cancelBtn!);
     containerBtn!.append(_okBtn!);
     modal = document.createElement("dialog") as DialogElement;
     modal!.className = className;
-    modal!.append(header!);
-    modal!.append(containerContent!);
+    modal!.append(head!);
+    modal!.append(desc!);
+    modal!.append(body!);
     modal!.append(containerBtn!);
     document.body!.append(modal!);
   }
 
-  Element get okBtn => _okBtn!;
+  Element? get okBtn => _okBtn;
   set okBtn(Element? newBtn) {
     _removeBtn(_okBtn, _onOk);
     _okBtn = newBtn;
     _addBtn(_okBtn, _onOk);
   }
 
-  Element get cancelBtn => _cancelBtn!;
+  Element? get cancelBtn => _cancelBtn;
   set cancelBtn(Element? newBtn) {
     _removeBtn(_cancelBtn, _onCancel);
     _cancelBtn = newBtn;
     _addBtn(_cancelBtn, _onCancel);
   }
 
-  EventListener get onOk => _onOk!;
-  set onOk(EventListener handleOk) {
+  EventListener? get onOk => _onOk;
+  set onOk(EventListener? handleOk) {
+    _removeBtn(_okBtn, _onOk);
     _onOk = handleOk;
-    _okBtn!.addEventListener("click", _onOk);
+    _addBtn(_okBtn, _onOk);
   }
 
-  EventListener get onCancel => _onCancel!;
-  set onCancel(EventListener handleCancel) {
+  EventListener? get onCancel => _onCancel;
+  set onCancel(EventListener? handleCancel) {
+    _removeBtn(_cancelBtn, _onCancel);
     _onCancel = handleCancel;
-    _cancelBtn!.addEventListener("click", _onCancel);
+    _addBtn(_cancelBtn, _onCancel);
   }
 
   void _addBtn(Element? btn, EventListener? event, [String type = "click"]) {
@@ -70,15 +75,16 @@ class Modal {
     }
   }
 
-  void open({String? content = "", String? title = ""}) {
-    header!.text = title;
-    containerContent!.innerHtml = content;
+  void open({String? title = "", String? subTitle = ""}) {
+    head!.text = title;
+    desc!.text = subTitle;
     modal!.showModal();
   }
 
   void close() {
-    header!.text = "";
-    containerContent!.innerHtml = "";
+    head!.text = "";
+    desc!.text = "";
+    body!.innerHtml = "";
     modal!.close();
   }
 }
@@ -93,6 +99,12 @@ void main() {
   final sections = querySelectorAll("body > section");
   final toggleModalBtn = querySelectorAll(".toggle-edit-modal");
 
+  final editModal = Modal("edit-modal");
+  editModal.okBtn = null;
+  editModal.onCancel = (e) {
+    editModal.close();
+  };
+
   Element cloneWithStyle(Element element, [bool? deep = true]) {
     final css = element.getComputedStyle();
     element = element.clone(deep) as Element;
@@ -105,13 +117,6 @@ void main() {
     }
     return element;
   }
-
-  final editModal = Modal("edit-modal");
-  editModal.okBtn = null;
-
-  editModal.onCancel = (e) {
-    editModal.close();
-  };
 
   void setStyle(key, value) {
     window.localStorage[key] = value;
@@ -136,14 +141,14 @@ void main() {
   void addChildToModal(ElementList elements) {
     for (var child in elements) {
       child = cloneWithStyle(child);
-      editModal.containerContent!.append(child);
+      editModal.body!.append(child);
     }
   }
 
   toggleModalBtn.asMap().forEach((key, btn) {
     btn.addEventListener("click", (e) {
       String name = btn.getAttribute("data-target")!;
-      editModal.open(title: "Hello there", content: "Edit $name");
+      editModal.open(title: "Hello there", subTitle: "Edit $name");
       switch (name) {
         case "sw-color":
           addChildToModal(boxColors);
@@ -220,6 +225,7 @@ void main() {
         return check;
       });
     } else {
+      checkedBoxColor = 0;
       boxColors.first.classes.add("checked");
       value = boxColors.first.style.getPropertyValue("--switcher");
     }
