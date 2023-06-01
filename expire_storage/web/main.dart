@@ -3,7 +3,7 @@ import 'dart:html';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-class ExpireStorage {
+final class ExpireStorage {
   static bool _checkUnique([List<dynamic> arr = const []]) {
     final checkedArray = arr.asMap().entries;
     return !checkedArray.any((data) {
