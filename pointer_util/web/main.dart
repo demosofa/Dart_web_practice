@@ -1,17 +1,17 @@
 import 'dart:html';
 
 final class PointerUtil {
-  static (int, int) getAxis(MouseEvent e, {isTarget = true}) {
+  static (num, num) getAxis(MouseEvent e, {isTarget = true}) {
     final Point<num> points = e.page;
     final num pageX = points.x, pageY = points.y;
     final target = isTarget ? e.target : e.currentTarget;
     final trueBound = getTrueBound(target as Element);
     final x = (pageX - trueBound.left) / trueBound.width;
     final y = (pageY - trueBound.top) / trueBound.height;
-    return (x.round(), y.round());
+    return (x, y);
   }
 
-  static ({int left, int top, int height, int width}) getTrueBound(
+  static ({num left, num top, num height, num width}) getTrueBound(
       Element elem) {
     final Rectangle<num> clientRect = elem.getBoundingClientRect();
     final (x, y, width, height) =
@@ -21,10 +21,10 @@ final class PointerUtil {
     final (clientLeft, clientTop) =
         (documentElement!.clientLeft, documentElement.clientTop);
     return (
-      top: y.round() + pageYOffset - clientTop!,
-      left: x.round() + pageXOffset - clientLeft!,
-      height: height.round(),
-      width: width.round(),
+      top: y + pageYOffset - clientTop!,
+      left: x + pageXOffset - clientLeft!,
+      height: height,
+      width: width,
     );
   }
 }
